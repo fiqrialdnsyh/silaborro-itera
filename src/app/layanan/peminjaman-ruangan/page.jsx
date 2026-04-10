@@ -6,10 +6,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   User, MapPin, CalendarDays, Clock, FileText, 
   Users, Building, Link as LinkIcon, CheckCircle2,
-  X, Info, ArrowRight, Power, AlertCircle, Mail, Phone // 👈 Icon Mail & Phone ditambahkan
+  X, Info, ArrowRight, Power, AlertCircle, Mail, Phone
 } from "lucide-react";
 
-import { collection, addDoc, serverTimestamp, onSnapshot, query, where } from "firebase/firestore"; 
+// 👇 Tambahkan getDocs di import ini
+import { collection, addDoc, serverTimestamp, onSnapshot, query, where, getDocs } from "firebase/firestore"; 
 import { db } from "../../../firebase"; 
 
 export default function PeminjamanRuangan() {
@@ -87,21 +88,59 @@ export default function PeminjamanRuangan() {
     const formData = new FormData(e.target);
     const dataObjek = Object.fromEntries(formData.entries());
     
-    // Validasi form: pastikan pengguna tidak memilih "- Pilih Ruangan -"
     if (dataObjek.ruangan === "") {
       alert("Harap pilih ruangan terlebih dahulu!");
       setIsLoading(false);
       return;
     }
 
-    dataObjek.role = role;
-    dataObjek.waktuPengajuan = serverTimestamp();
-    dataObjek.status = "pending";
-
     try {
+      // =================================================================
+      // 🛑 LOGIKA PENCEGAHAN DOUBLE BOOKING (LIGHTWEIGHT QUERY) 🛑
+      // =================================================================
+      
+      // 1. Tarik jadwal HANYA untuk ruangan dan tanggal yang dipilih, 
+      // yang statusnya sedang 'pending' atau 'disetujui' (abaikan yang ditolak).
+      const qCek = query(
+        collection(db, "pengajuan_lab"),
+        where("ruangan", "==", dataObjek.ruangan),
+        where("tanggal", "==", dataObjek.tanggal),
+        where("status", "in", ["pending", "disetujui"])
+      );
+      
+      const snapshotCek = await getDocs(qCek);
+      let isConflict = false;
+
+      // 2. Loop data dan cek apakah ada waktu yang bersilangan (overlap)
+      snapshotCek.forEach((doc) => {
+        const jadwalEksis = doc.data();
+        
+        // Rumus Overlap: (Start Baru < End Lama) DAN (End Baru > Start Lama)
+        if (
+          dataObjek.jam_mulai < jadwalEksis.jam_selesai && 
+          dataObjek.jam_selesai > jadwalEksis.jam_mulai
+        ) {
+          isConflict = true;
+        }
+      });
+
+      // 3. Jika nabrak, hentikan proses dan beri tahu user
+      if (isConflict) {
+        alert("⚠️ Maaf, jam peminjaman ini bentrok dengan jadwal lain yang sudah ada (sedang pending / disetujui). Silakan pilih jam atau ruangan lain.");
+        setIsLoading(false);
+        return; // Menghentikan eksekusi kode di bawahnya
+      }
+      // =================================================================
+
+      // Jika aman, lanjutkan proses simpan data seperti biasa
+      dataObjek.role = role;
+      dataObjek.waktuPengajuan = serverTimestamp();
+      dataObjek.status = "pending";
+
       await addDoc(collection(db, "pengajuan_lab"), dataObjek);
       setIsSuccess(true);
       e.target.reset();
+      
       setFilterRuangan(dataObjek.ruangan);
       setFilterTanggal(dataObjek.tanggal);
 
@@ -126,7 +165,7 @@ export default function PeminjamanRuangan() {
               <div className={`p-6 text-white flex justify-between items-start ${selectedEvent.status === 'disetujui' ? 'bg-gradient-to-r from-green-500 to-emerald-400' : selectedEvent.status === 'ditolak' ? 'bg-gradient-to-r from-red-500 to-rose-400' : 'bg-gradient-to-r from-orange-500 to-amber-400'}`}>
                 <div>
                   <span className="inline-block px-2.5 py-1 bg-white/20 rounded-lg text-xs font-bold mb-2 backdrop-blur-md">
-                    {selectedEvent.status === 'disetujui' ? '✅ Telah Disetujui' : selectedEvent.status === 'ditolak' ? '❌ Ditolak' : '⏳ Menunggu Persetujuan'}
+                    {selectedEvent.status === 'disetujui' ? 'Telah Disetujui' : selectedEvent.status === 'ditolak' ? '❌ Ditolak' : '⏳ Menunggu Persetujuan'}
                   </span>
                   <h3 className="text-xl font-bold leading-tight">{selectedEvent.keperluan}</h3>
                   <p className="text-white/80 text-sm mt-1 flex items-center gap-1.5"><Clock size={14}/> {selectedEvent.tanggal} | {selectedEvent.jam_mulai} - {selectedEvent.jam_selesai}</p>
@@ -142,7 +181,6 @@ export default function PeminjamanRuangan() {
                     <p className="font-bold text-slate-800 text-base">{selectedEvent.nama_peminjam}</p>
                     <p className="text-sm text-slate-500 capitalize">{selectedEvent.role} {selectedEvent.instansi ? `- ${selectedEvent.instansi}` : ''}</p>
                     
-                    {/* Tampilkan info kontak di popup */}
                     <div className="mt-2 flex flex-col gap-1 text-xs font-medium text-slate-500">
                       {selectedEvent.email && <span className="flex items-center gap-1.5"><Mail size={12}/> {selectedEvent.email}</span>}
                       {selectedEvent.no_hp && <span className="flex items-center gap-1.5"><Phone size={12}/> {selectedEvent.no_hp}</span>}
@@ -207,7 +245,6 @@ export default function PeminjamanRuangan() {
           <div className="bg-white p-7 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100">
             <form onSubmit={handleSubmit} className="space-y-4 text-sm">
               
-              {/* 1. Ruangan */}
               <div>
                 <label className="flex items-center gap-1.5 mb-2 font-semibold text-slate-700"><MapPin size={16}/> Ruangan <span className="text-red-500">*</span></label>
                 <select name="ruangan" defaultValue="" required className="w-full border border-slate-200 p-3 rounded-xl bg-slate-50/50 outline-none transition-all cursor-pointer focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500">
@@ -218,13 +255,11 @@ export default function PeminjamanRuangan() {
                 </select>
               </div>
 
-              {/* 2. Nama Peminjam */}
               <div>
                 <label className="flex items-center gap-1.5 mb-2 font-semibold text-slate-700"><User size={16}/> Nama Peminjam <span className="text-red-500">*</span></label>
                 <input type="text" name="nama_peminjam" required className="w-full border border-slate-200 p-3 rounded-xl bg-slate-50/50 outline-none transition-all focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500" />
               </div>
 
-              {/* 3. Instansi & Jumlah Peserta */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="flex items-center gap-1.5 mb-2 font-semibold text-slate-700"><Building size={16}/> Instansi / Unit</label>
@@ -236,7 +271,6 @@ export default function PeminjamanRuangan() {
                 </div>
               </div>
 
-              {/* 4. Email & No HP */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="flex items-center gap-1.5 mb-2 font-semibold text-slate-700"><Mail size={16}/> Email <span className="text-red-500">*</span></label>
@@ -248,19 +282,16 @@ export default function PeminjamanRuangan() {
                 </div>
               </div>
 
-              {/* 5. Keperluan */}
               <div>
                 <label className="flex items-center gap-1.5 mb-2 font-semibold text-slate-700"><FileText size={16}/> Keperluan <span className="text-red-500">*</span></label>
                 <input type="text" name="keperluan" required className="w-full border border-slate-200 p-3 rounded-xl bg-slate-50/50 outline-none transition-all focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500" />
               </div>
 
-              {/* 6. Catatan */}
               <div>
                 <label className="flex items-center gap-1.5 mb-2 font-semibold text-slate-700"><Info size={16}/> Catatan</label>
                 <textarea name="catatan" rows="2" placeholder="Instruksi tambahan untuk laboran..." className="w-full border border-slate-200 p-3 rounded-xl bg-slate-50/50 outline-none transition-all focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 resize-none"></textarea>
               </div>
 
-              {/* 7. Tanggal & Jam */}
               <div className="grid grid-cols-2 gap-3 pb-2">
                 <div className="col-span-2">
                   <label className="flex items-center gap-1.5 mb-2 font-semibold text-slate-700"><CalendarDays size={16}/> Tanggal <span className="text-red-500">*</span></label>
@@ -276,7 +307,6 @@ export default function PeminjamanRuangan() {
                 </div>
               </div>
 
-              {/* KHUSUS DOSEN */}
               {role === "dosen" && (
                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="p-5 bg-indigo-50/80 border border-indigo-100 rounded-2xl space-y-3">
                   <h3 className="font-bold text-indigo-900 text-sm flex items-center gap-2"><LinkIcon size={16} /> Tautan Materi Kuliah</h3>
