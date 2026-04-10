@@ -20,50 +20,53 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handler);
   }, []);
 
+  // 👇 SEMUA LINK TELAH DIUBAH KE SERVER WORDPRESS 👇
   const navLinks = [
-    { label: "Home", href: "/" },
+    { label: "Home", href: "https://ro.itera.ac.id/" },
     {
       label: "Profil",
       children: [
-        { href: "/profil/sejarah", label: "Sejarah" },
-        { href: "/profil/visi-misi", label: "Visi & Misi" },
-        { href: "/profil/staff-dosen", label: "Staff Dosen" },
-        { href: "/profil/prestasi-mahasiswa", label: "Prestasi Mahasiswa" },
+        { href: "https://ro.itera.ac.id/profil/sejarah", label: "Sejarah" },
+        { href: "https://ro.itera.ac.id/profil/visi-misi", label: "Visi & Misi" },
+        { href: "https://ro.itera.ac.id/profil/staff-dosen", label: "Staff Dosen" },
+        { href: "https://ro.itera.ac.id/profil/prestasi-mahasiswa", label: "Prestasi Mahasiswa" },
       ],
     },
     {
       label: "Akademik",
       mega: true,
       children: [
-        { href: "/akademik/kurikulum", label: "Kurikulum" },
-        { href: "/akademik/jadwal", label: "Jadwal Kuliah" },
-        { href: "/akademik/dokumen-akademik", label: "Dokumen Akademik" },
-        { href: "/akademik/kebutuhan-mahasiswa", label: "Kebutuhan Mahasiswa" },
-        { href: "/akademik/kalender", label: "Kalender Akademik" },
-        { href: "/akademik/kerja-praktik", label: "Kerja Praktik" },
-        { href: "/akademik/kuliah-kerja-nyata", label: "Kuliah Kerja Nyata" },
-        { href: "/akademik/ujian-akhir", label: "Ujian Akhir" },
+        { href: "https://ro.itera.ac.id/akademik/kurikulum", label: "Kurikulum" },
+        { href: "https://ro.itera.ac.id/akademik/jadwal", label: "Jadwal Kuliah" },
+        { href: "https://ro.itera.ac.id/akademik/dokumen-akademik", label: "Dokumen Akademik" },
+        { href: "https://ro.itera.ac.id/akademik/kebutuhan-mahasiswa", label: "Kebutuhan Mahasiswa" },
+        { href: "https://ro.itera.ac.id/akademik/kalender", label: "Kalender Akademik" },
+        { href: "https://ro.itera.ac.id/akademik/kerja-praktik", label: "Kerja Praktik" },
+        { href: "https://ro.itera.ac.id/akademik/kuliah-kerja-nyata", label: "Kuliah Kerja Nyata" },
+        { href: "https://ro.itera.ac.id/akademik/ujian-akhir", label: "Ujian Akhir" },
       ],
     },
     {
       label: "Layanan",
       children: [
-        { href: "/layanan/fakultas", label: "Layanan Fakultas" },
-        { href: "/layanan/keuangan", label: "Layanan Keuangan" },
-        { href: "/layanan/pmb", label: "Penerimaan Mahasiswa Baru" },
-        { href: "/layanan/lapor-pengaduan", label: "Lapor Pengaduan" },
+        { href: "https://ro.itera.ac.id/layanan/fakultas", label: "Layanan Fakultas" },
+        { href: "https://ro.itera.ac.id/layanan/keuangan", label: "Layanan Keuangan" },
+        { href: "https://ro.itera.ac.id/layanan/pmb", label: "Penerimaan Mahasiswa Baru" },
+        { href: "https://ro.itera.ac.id/layanan/lapor-pengaduan", label: "Lapor Pengaduan" },
+        // LOKAL: Tetap di server Next.js/Vercel
+        { href: "/layanan/peminjaman-ruangan", label: "Peminjaman Ruangan" }, 
       ],
     },
     {
       label: "Fasilitas",
       children: [
-        { href: "/fasilitas/upt-tik-itera", label: "UPT TIK ITERA" },
-        { href: "/fasilitas/laboratorium", label: "Laboratorium" },
-        { href: "/fasilitas/perpustakaan", label: "Perpustakaan" },
+        { href: "https://ro.itera.ac.id/fasilitas/upt-tik-itera", label: "UPT TIK ITERA" },
+        { href: "https://ro.itera.ac.id/fasilitas/laboratorium", label: "Laboratorium" },
+        { href: "https://ro.itera.ac.id/fasilitas/perpustakaan", label: "Perpustakaan" },
       ],
     },
-    { label: "Berita", href: "/berita" },
-    { label: "Event", href: "/event" },
+    { label: "Berita", href: "https://ro.itera.ac.id/berita" },
+    { label: "Event", href: "https://ro.itera.ac.id/event" },
   ];
 
   const isParentActive = (item) => {
@@ -82,8 +85,8 @@ export default function Navbar() {
       >
         <div className="max-w-6xl mx-auto px-6 h-[72px] flex items-center justify-between">
 
-          {/* LOGO */}
-          <Link href="/" className="flex items-center">
+          {/* LOGO: Kembali ke Home WordPress */}
+          <Link href="https://ro.itera.ac.id/" className="flex items-center">
             <motion.img
               src="/RekayasaKeolahragaan.png"
               alt="Logo"
@@ -106,28 +109,28 @@ export default function Navbar() {
                   onMouseLeave={() => setDropdown(null)}
                 >
                   {item.href ? (
-  <Link
-    href={item.href}
-    className={`flex items-center gap-1 transition ${
-      active
-        ? "text-orange-600"
-        : "text-gray-800 hover:text-orange-600"
-    }`}
-  >
-    {item.label}
-  </Link>
-) : (
-  <button
-    className={`flex items-center gap-1 transition ${
-      active
-        ? "text-orange-600"
-        : "text-gray-800 hover:text-orange-600"
-    }`}
-  >
-    {item.label}
-    {hasChild && <ChevronDown size={16} />}
-  </button>
-)}
+                    <Link
+                      href={item.href}
+                      className={`flex items-center gap-1 transition ${
+                        active
+                          ? "text-orange-600"
+                          : "text-gray-800 hover:text-orange-600"
+                      }`}
+                    >
+                      {item.label}
+                    </Link>
+                  ) : (
+                    <button
+                      className={`flex items-center gap-1 transition ${
+                        active
+                          ? "text-orange-600"
+                          : "text-gray-800 hover:text-orange-600"
+                      }`}
+                    >
+                      {item.label}
+                      {hasChild && <ChevronDown size={16} />}
+                    </button>
+                  )}
                   {active && (
                     <motion.span
                       layoutId="nav"
@@ -147,7 +150,9 @@ export default function Navbar() {
                           <Link
                             key={child.href}
                             href={child.href}
-                            className="px-3 py-2 rounded-md text-sm hover:bg-orange-50 hover:text-orange-600"
+                            className={`px-3 py-2 rounded-md text-sm hover:bg-orange-50 hover:text-orange-600 ${
+                              pathname === child.href ? "text-orange-600 bg-orange-50/50 font-bold" : "text-gray-700"
+                            }`}
                           >
                             {child.label}
                           </Link>
@@ -231,7 +236,9 @@ export default function Navbar() {
                                 key={child.href}
                                 href={child.href}
                                 onClick={() => setMenuOpen(false)}
-                                className="py-2 text-sm text-gray-600 hover:text-orange-600"
+                                className={`py-2 text-sm hover:text-orange-600 ${
+                                  pathname === child.href ? "text-orange-600 font-bold" : "text-gray-600"
+                                }`}
                               >
                                 {child.label}
                               </Link>
