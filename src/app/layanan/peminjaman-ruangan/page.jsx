@@ -233,8 +233,8 @@ export default function PeminjamanRuangan() {
           ) : (
             <Link href="/login" title="Login Staf / Dosen" className="flex items-center justify-center w-11 h-11 rounded-full text-white bg-orange-500 shadow-md shadow-orange-500/30 hover:bg-orange-600 hover:scale-105 transition-all"><ArrowRight size={20} strokeWidth={2.5} /></Link>
           )}
-          <Link href="/" className="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all">Beranda</Link>
-        </div>
+          <Link href="https://ro.itera.ac.id/" className="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all">Beranda</Link>
+        </div> {/* <--- INI DIV PENUTUP YANG DITAMBAHKAN */}
       </motion.div>
 
       {role === 'dosen' && (

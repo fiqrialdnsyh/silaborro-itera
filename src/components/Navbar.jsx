@@ -4,15 +4,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Menu, X } from "lucide-react";
+import { ChevronDown, Menu, X, Search } from "lucide-react";
 
 export default function Navbar() {
   const pathname = usePathname();
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdown, setDropdown] = useState(null);
-  const [mobileDropdown, setMobileDropdown] = useState(null);
   const [scrolled, setScrolled] = useState(false);
+  const [mobileDropdown, setMobileDropdown] = useState(null);
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 50);
@@ -20,7 +20,6 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handler);
   }, []);
 
-  // 👇 SEMUA LINK TELAH DIUBAH KE SERVER WORDPRESS 👇
   const navLinks = [
     { label: "Home", href: "https://ro.itera.ac.id/" },
     {
@@ -34,7 +33,6 @@ export default function Navbar() {
     },
     {
       label: "Akademik",
-      mega: true,
       children: [
         { href: "https://ro.itera.ac.id/akademik/kurikulum", label: "Kurikulum" },
         { href: "https://ro.itera.ac.id/akademik/jadwal", label: "Jadwal Kuliah" },
@@ -53,8 +51,7 @@ export default function Navbar() {
         { href: "https://ro.itera.ac.id/layanan/keuangan", label: "Layanan Keuangan" },
         { href: "https://ro.itera.ac.id/layanan/pmb", label: "Penerimaan Mahasiswa Baru" },
         { href: "https://ro.itera.ac.id/layanan/lapor-pengaduan", label: "Lapor Pengaduan" },
-        // LOKAL: Tetap di server Next.js/Vercel
-        { href: "/layanan/peminjaman-ruangan", label: "Peminjaman Ruangan" }, 
+        { href: "/layanan/peminjaman-ruangan", label: "Peminjaman Lab" }, 
       ],
     },
     {
@@ -71,173 +68,165 @@ export default function Navbar() {
 
   const isParentActive = (item) => {
     if (item.href) return pathname === item.href;
-    if (item.children)
-      return item.children.some((child) => pathname.startsWith(child.href));
+    if (item.children) return item.children.some((child) => pathname.startsWith(child.href));
     return false;
   };
 
   return (
-    <header className="fixed top-0 w-full z-50">
-      <div
-        className={`border-b border-gray-200 transition-all duration-300 ${
-          scrolled ? "bg-white shadow-md" : "bg-white"
-        }`}
-      >
-        <div className="max-w-6xl mx-auto px-6 h-[72px] flex items-center justify-between">
+    <header className="fixed top-0 w-full z-50 font-sans">
+      <div className={`border-b border-gray-200 transition-all duration-300 ${scrolled ? "bg-white shadow-md" : "bg-white"}`}>
+        <div className="max-w-[85rem] mx-auto px-4 md:px-8 h-[80px] flex items-center justify-between">
 
-          {/* LOGO: Kembali ke Home WordPress */}
-          <Link href="https://ro.itera.ac.id/" className="flex items-center">
-            <motion.img
+          {/* 1. LOGO */}
+          <Link href="https://ro.itera.ac.id/" className="flex items-center h-full">
+            <img
               src="/RekayasaKeolahragaan.png"
-              alt="Logo"
-              className="w-25 h-25"
-              whileHover={{ rotate: 6, scale: 1.05 }}
+              alt="Logo Rekayasa Keolahragaan"
+              style={{ maxHeight: '48px', width: 'auto', objectFit: 'contain' }}
+              className="py-1"
             />
           </Link>
 
-          {/* DESKTOP NAV */}
-          <nav className="hidden md:flex gap-8 text-sm font-medium items-center">
-            {navLinks.map((item) => {
-              const active = isParentActive(item);
-              const hasChild = !!item.children;
+          {/* 2. DESKTOP NAVIGATION */}
+          <div className="hidden lg:flex items-center h-full">
+            <nav className="flex items-center h-full text-[13px] xl:text-[14px] font-medium text-slate-700">
+              {navLinks.map((item) => {
+                const active = isParentActive(item);
+                const hasChild = !!item.children;
 
-              return (
-                <div
-                  key={item.label}
-                  className="relative"
-                  onMouseEnter={() => hasChild && setDropdown(item.label)}
-                  onMouseLeave={() => setDropdown(null)}
-                >
-                  {item.href ? (
-                    <Link
-                      href={item.href}
-                      className={`flex items-center gap-1 transition ${
-                        active
-                          ? "text-orange-600"
-                          : "text-gray-800 hover:text-orange-600"
-                      }`}
-                    >
-                      {item.label}
-                    </Link>
-                  ) : (
-                    <button
-                      className={`flex items-center gap-1 transition ${
-                        active
-                          ? "text-orange-600"
-                          : "text-gray-800 hover:text-orange-600"
-                      }`}
-                    >
-                      {item.label}
-                      {hasChild && <ChevronDown size={16} />}
-                    </button>
-                  )}
-                  {active && (
-                    <motion.span
-                      layoutId="nav"
-                      className="absolute -bottom-2 h-[2px] bg-orange-600 w-full"
-                    />
-                  )}
-
-                  <AnimatePresence>
-                    {hasChild && dropdown === item.label && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0 }}
-                        className="absolute top-full mt-3 px-4 py-4 bg-white border border-gray-200 rounded-xl shadow-xl flex flex-col min-w-[220px]"
+                return (
+                  <div
+                    key={item.label}
+                    className="relative h-full flex items-center px-3 xl:px-4 cursor-pointer group"
+                    onMouseEnter={() => hasChild && setDropdown(item.label)}
+                    onMouseLeave={() => setDropdown(null)}
+                  >
+                    {item.href ? (
+                      <Link
+                        href={item.href}
+                        className={`flex items-center h-full transition-colors ${
+                          active ? "text-orange-600" : "hover:text-orange-600"
+                        }`}
                       >
-                        {item.children.map((child) => (
-                          <Link
-                            key={child.href}
-                            href={child.href}
-                            className={`px-3 py-2 rounded-md text-sm hover:bg-orange-50 hover:text-orange-600 ${
-                              pathname === child.href ? "text-orange-600 bg-orange-50/50 font-bold" : "text-gray-700"
-                            }`}
-                          >
-                            {child.label}
-                          </Link>
-                        ))}
-                      </motion.div>
+                        {item.label}
+                      </Link>
+                    ) : (
+                      <span
+                        className={`flex items-center h-full gap-1.5 transition-colors ${
+                          active || dropdown === item.label ? "text-orange-600" : "hover:text-orange-600"
+                        }`}
+                      >
+                        {item.label}
+                        {hasChild && (
+                          <ChevronDown 
+                            size={14} 
+                            className={`transition-transform duration-200 ${dropdown === item.label ? "rotate-180" : ""}`} 
+                          />
+                        )}
+                      </span>
                     )}
-                  </AnimatePresence>
-                </div>
-              );
-            })}
-          </nav>
 
-          {/* MOBILE BUTTON */}
+                    {/* Kotak Dropdown */}
+                    <AnimatePresence>
+                      {hasChild && dropdown === item.label && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 15 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 5 }}
+                          transition={{ duration: 0.2 }}
+                          className="absolute top-[80px] left-0 bg-white border border-gray-200 shadow-xl flex flex-col min-w-[240px] z-50"
+                        >
+                          {/* Pita oranye */}
+                          <div className="h-1 w-full bg-orange-600"></div>
+                          
+                          {item.children.map((child, idx) => (
+                            <Link
+                              key={child.href}
+                              href={child.href}
+                              className={`px-5 py-3.5 text-[13px] transition-colors hover:text-orange-600 hover:bg-slate-50 ${
+                                pathname === child.href ? "text-orange-600 font-bold bg-orange-50/30" : "text-slate-700"
+                              } ${idx !== item.children.length - 1 ? "border-b border-gray-200" : ""}`} 
+                            >
+                              {child.label}
+                            </Link>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                );
+              })}
+            </nav>
+
+            {/* Ikon Search */}
+            <button className="ml-5 xl:ml-8 text-slate-700 hover:text-orange-600 transition-colors">
+              <Search size={18} strokeWidth={2.5} />
+            </button>
+          </div>
+
+          {/* 3. MOBILE BUTTON */}
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="md:hidden p-2 rounded bg-gray-200"
+            className="lg:hidden p-2 rounded text-slate-700 hover:bg-slate-100 transition-colors"
           >
-            {menuOpen ? <X size={20} /> : <Menu size={20} />}
+            {menuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
 
-        {/* MOBILE MENU */}
+        {/* 4. MOBILE MENU DROPDOWN */}
         <AnimatePresence>
           {menuOpen && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="md:hidden bg-white border-t"
+              className="lg:hidden bg-white border-t border-gray-100 overflow-hidden shadow-lg"
             >
-              <div className="flex flex-col px-6 py-4">
-
+              <div className="flex flex-col px-6 py-2">
                 {navLinks.map((item) => {
                   const hasChild = !!item.children;
-
                   return (
-                    <div key={item.label} className="border-b last:border-none">
-
-                      {/* Parent */}
+                    <div key={item.label} className="border-b border-gray-100 last:border-none">
                       <button
                         onClick={() =>
                           hasChild
-                            ? setMobileDropdown(
-                                mobileDropdown === item.label
-                                  ? null
-                                  : item.label
-                              )
+                            ? setMobileDropdown(mobileDropdown === item.label ? null : item.label)
                             : setMenuOpen(false)
                         }
-                        className="w-full flex justify-between items-center py-3 text-left font-medium text-gray-800"
+                        className="w-full flex justify-between items-center py-4 text-left text-[14px] font-medium text-slate-800"
                       >
                         {item.href ? (
-                          <Link href={item.href}>{item.label}</Link>
+                          <Link href={item.href} className="w-full hover:text-orange-600 transition-colors">
+                            {item.label}
+                          </Link>
                         ) : (
-                          item.label
+                          <span className={`${mobileDropdown === item.label ? "text-orange-600" : ""} transition-colors`}>{item.label}</span>
                         )}
 
                         {hasChild && (
                           <ChevronDown
-                            className={`transition ${
-                              mobileDropdown === item.label
-                                ? "rotate-180"
-                                : ""
-                            }`}
+                            className={`transition-transform ${mobileDropdown === item.label ? "rotate-180 text-orange-600" : "text-slate-400"}`}
                             size={16}
                           />
                         )}
                       </button>
 
-                      {/* Dropdown */}
+                      {/* Mobile Sub-menu */}
                       <AnimatePresence>
                         {hasChild && mobileDropdown === item.label && (
                           <motion.div
-                            initial={{ height: 0 }}
-                            animate={{ height: "auto" }}
-                            exit={{ height: 0 }}
-                            className="flex flex-col pl-4 pb-3"
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="flex flex-col pl-4 pb-4 overflow-hidden"
                           >
                             {item.children.map((child) => (
                               <Link
                                 key={child.href}
                                 href={child.href}
                                 onClick={() => setMenuOpen(false)}
-                                className={`py-2 text-sm hover:text-orange-600 ${
-                                  pathname === child.href ? "text-orange-600 font-bold" : "text-gray-600"
+                                className={`py-3 text-[13px] border-l-2 pl-4 transition-colors ${
+                                  pathname === child.href ? "border-orange-600 text-orange-600 font-semibold" : "border-gray-200 text-slate-600 hover:text-orange-600"
                                 }`}
                               >
                                 {child.label}
@@ -246,16 +235,13 @@ export default function Navbar() {
                           </motion.div>
                         )}
                       </AnimatePresence>
-
                     </div>
                   );
                 })}
-
               </div>
             </motion.div>
           )}
         </AnimatePresence>
-
       </div>
     </header>
   );
