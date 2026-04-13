@@ -9,7 +9,6 @@ import {
   X, Info, ArrowRight, Power, AlertCircle, Mail, Phone
 } from "lucide-react";
 
-// 👇 Tambahkan getDocs di import ini
 import { collection, addDoc, serverTimestamp, onSnapshot, query, where, getDocs } from "firebase/firestore"; 
 import { db } from "../../../firebase"; 
 
@@ -95,12 +94,7 @@ export default function PeminjamanRuangan() {
     }
 
     try {
-      // =================================================================
-      // 🛑 LOGIKA PENCEGAHAN DOUBLE BOOKING (LIGHTWEIGHT QUERY) 🛑
-      // =================================================================
-      
-      // 1. Tarik jadwal HANYA untuk ruangan dan tanggal yang dipilih, 
-      // yang statusnya sedang 'pending' atau 'disetujui' (abaikan yang ditolak).
+      // 1. CEK DOUBLE BOOKING (BENTROK JADWAL)
       const qCek = query(
         collection(db, "pengajuan_lab"),
         where("ruangan", "==", dataObjek.ruangan),
@@ -111,11 +105,8 @@ export default function PeminjamanRuangan() {
       const snapshotCek = await getDocs(qCek);
       let isConflict = false;
 
-      // 2. Loop data dan cek apakah ada waktu yang bersilangan (overlap)
       snapshotCek.forEach((doc) => {
         const jadwalEksis = doc.data();
-        
-        // Rumus Overlap: (Start Baru < End Lama) DAN (End Baru > Start Lama)
         if (
           dataObjek.jam_mulai < jadwalEksis.jam_selesai && 
           dataObjek.jam_selesai > jadwalEksis.jam_mulai
@@ -124,20 +115,37 @@ export default function PeminjamanRuangan() {
         }
       });
 
-      // 3. Jika nabrak, hentikan proses dan beri tahu user
       if (isConflict) {
         alert("⚠️ Maaf, jam peminjaman ini bentrok dengan jadwal lain yang sudah ada (sedang pending / disetujui). Silakan pilih jam atau ruangan lain.");
         setIsLoading(false);
-        return; // Menghentikan eksekusi kode di bawahnya
+        return; 
       }
-      // =================================================================
 
-      // Jika aman, lanjutkan proses simpan data seperti biasa
+      // 2. SIMPAN DATA KE FIREBASE
       dataObjek.role = role;
       dataObjek.waktuPengajuan = serverTimestamp();
       dataObjek.status = "pending";
 
       await addDoc(collection(db, "pengajuan_lab"), dataObjek);
+
+      // 3. KIRIM NOTIFIKASI EMAIL KE LABORAN
+      try {
+        await fetch("/api/send-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            nama: dataObjek.nama_peminjam,
+            ruangan: dataObjek.ruangan,
+            tanggal: dataObjek.tanggal,
+            jam: `${dataObjek.jam_mulai} - ${dataObjek.jam_selesai}`,
+            keperluan: dataObjek.keperluan
+          }),
+        });
+      } catch (emailError) {
+        console.error("Email gagal dikirim, tapi data tetap masuk", emailError);
+      }
+
+      // 4. RESET FORM & TAMPILKAN SUKSES
       setIsSuccess(true);
       e.target.reset();
       
@@ -165,7 +173,7 @@ export default function PeminjamanRuangan() {
               <div className={`p-6 text-white flex justify-between items-start ${selectedEvent.status === 'disetujui' ? 'bg-gradient-to-r from-green-500 to-emerald-400' : selectedEvent.status === 'ditolak' ? 'bg-gradient-to-r from-red-500 to-rose-400' : 'bg-gradient-to-r from-orange-500 to-amber-400'}`}>
                 <div>
                   <span className="inline-block px-2.5 py-1 bg-white/20 rounded-lg text-xs font-bold mb-2 backdrop-blur-md">
-                    {selectedEvent.status === 'disetujui' ? 'Telah Disetujui' : selectedEvent.status === 'ditolak' ? '❌ Ditolak' : '⏳ Menunggu Persetujuan'}
+                    {selectedEvent.status === 'disetujui' ? '✅ Telah Disetujui' : selectedEvent.status === 'ditolak' ? '❌ Ditolak' : '⏳ Menunggu Persetujuan'}
                   </span>
                   <h3 className="text-xl font-bold leading-tight">{selectedEvent.keperluan}</h3>
                   <p className="text-white/80 text-sm mt-1 flex items-center gap-1.5"><Clock size={14}/> {selectedEvent.tanggal} | {selectedEvent.jam_mulai} - {selectedEvent.jam_selesai}</p>
@@ -249,9 +257,9 @@ export default function PeminjamanRuangan() {
                 <label className="flex items-center gap-1.5 mb-2 font-semibold text-slate-700"><MapPin size={16}/> Ruangan <span className="text-red-500">*</span></label>
                 <select name="ruangan" defaultValue="" required className="w-full border border-slate-200 p-3 rounded-xl bg-slate-50/50 outline-none transition-all cursor-pointer focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500">
                   <option value="" disabled>- Pilih Ruangan -</option>
-                  <option value="Lab IoT">Laboratorium Internet of Things</option>
-                  <option value="Lab Komputer Dasar">Lab Komputer Dasar</option>
-                  <option value="Ruang Kelas E">Ruang Kelas E</option>
+                  <option value="Lab Fisiologi Olahraga">Lab Fisiologi Olahraga</option>
+                  <option value="Lab Analisis Gerak">Lab Analisis Gerak</option>
+                  <option value="Lab Teknologi Olahraga">Lab Teknologi Olahraga</option>
                 </select>
               </div>
 
@@ -340,9 +348,9 @@ export default function PeminjamanRuangan() {
                   onChange={(e) => setFilterRuangan(e.target.value)}
                   className="px-3 py-2 rounded-xl text-sm bg-white border border-slate-200 outline-none font-medium text-slate-700 cursor-pointer hover:border-orange-300 focus:ring-2 focus:ring-orange-500/20"
                 >
-                  <option value="Lab IoT">Lab Internet of Things</option>
-                  <option value="Lab Komputer Dasar">Lab Komputer Dasar</option>
-                  <option value="Ruang Kelas E">Ruang Kelas E</option>
+                  <option value="Lab Fisiologi Olahraga">Lab Fisiologi Olahraga</option>
+                  <option value="Lab Analisis Gerak">Lab Analisis Gerak</option>
+                  <option value="Lab Teknologi Olahraga">Lab Teknologi Olahraga</option>
                 </select>
                 <input 
                   type="date" 
