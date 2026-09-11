@@ -1,0 +1,27 @@
+name: Update README Automatically
+
+on:
+  push:
+    branches:
+      - main  # Ganti dengan 'master' jika cabang utama kamu bernama master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Ubah Isi README
+      run: |
+        echo "# Projek Keren Saya" > README.md
+        echo "Terakhir diperbarui secara otomatis pada: $(date)" >> README.md
+        # Kamu bisa mengganti perintah di atas dengan skrip buatanmu sendiri
+
+    - name: Simpan Perubahan ke GitHub
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.name "github-actions[bot]@://github.com"
+        git add README.md
+        git commit -m "Ubah README secara otomatis [skip ci]" || exit 0
+        git push
